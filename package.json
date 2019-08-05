@@ -1,0 +1,59 @@
+{
+  "name": "maptalktest",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --open  --config webpack/webpack.config.js",
+    "lint": "eslint --ext .js src module",
+    "lint:fix": "npm run lint -- --fix",
+    "build": "webpack --config webpack/webpack.config.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,vue}": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "@turf/turf": "^5.1.6",
+    "axios": "^0.19.0",
+    "geometry-extrude": "^0.1.2",
+    "lodash": "^4.17.15",
+    "maptalks": "^0.44.2",
+    "maptalks.three": "^0.6.2",
+    "three": "^0.107.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/parser": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@wildpeaks/three-webpack-plugin": "^2.0.0",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^10.0.2",
+    "babel-loader": "^8.0.6",
+    "babel-types": "^6.26.0",
+    "babylon": "^6.18.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.3",
+    "css-loader": "^3.0.0",
+    "eslint": "^6.0.1",
+    "eslint-loader": "^2.2.1",
+    "file-loader": "^4.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "husky": "^3.0.0",
+    "imports-loader": "^0.8.0",
+    "lint-staged": "^9.2.0",
+    "raw-loader": "^3.1.0",
+    "style-loader": "^0.23.1",
+    "three": "0.106.2",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2"
+  }
+}
