@@ -125,7 +125,7 @@ axios.get('data/sd.geojson')
                 var ll = me.coordinateToVector3({x:geo[0],y:geo[1]});
                 return [
                     ll.x,
-                    -ll.y,
+                    ll.y,
                     geo[2] || 0
                 ];
             }
