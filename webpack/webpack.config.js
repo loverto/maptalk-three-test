@@ -41,7 +41,8 @@ module.exports = {
             { from: './textures', to: 'textures' },
             { from: './css', to: 'css' },
             { from: './js', to: 'js' },
-            { from: './fonts', to: 'fonts' }
+            { from: './fonts', to: 'fonts' },
+            { from: './public', to: 'data' }
         ]),
         new webpack.HotModuleReplacementPlugin(),
         new webpack.ProvidePlugin({
