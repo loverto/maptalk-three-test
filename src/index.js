@@ -123,11 +123,22 @@ axios.get('data/sd.geojson')
             }
             function _coorConvert(geo) {
                 var ll = me.coordinateToVector3({x:geo[0],y:geo[1]});
+                // if (isNaN(ll.x ) || isNaN(ll.y)){
+                //     debugger
+                // }
+                // 转换为 three.js 坐标
                 return [
                     ll.x,
                     ll.y,
                     geo[2] || 0
                 ];
+                // 原坐标
+
+                // return [
+                //     geo[0],
+                //     geo[1],
+                //     geo[2] || 0
+                // ];
             }
             var geoData = [];
             var propertiesData = [];
@@ -135,27 +146,28 @@ axios.get('data/sd.geojson')
                 var coord = getCoords(cleanCoords(currentFeature));
                 let items = _coordProject(coord);
                 currentFeature.geometry.coordinates = items
+                json.features[featureIndex] = currentFeature;
                 geoData.push(items);
                 currentFeature.properties._id = featureIndex + 1;
                 propertiesData.push(currentFeature.properties);
             });
 
-            debugger
-            // 线条排序的索引，默认情况下，用第一条线段来匹配
+// 线条排序的索引，默认情况下，用第一条线段来匹配
             var idx = 0;
-            // 取出的首尾坐标点
+// 取出的首尾坐标点
             var arr = []
-            // 转换为纯数组的点
+// 转换为纯数组的点
             var lanes = new Map();
-            // 把匹配的数据存储为geojson格式的
+// 把匹配的数据存储为geojson格式的
             var lanesFeatures = new Map();
-            // 用来存储已经排序过并连上的索引数组
-            var indexs = []
-            // 把数据处理为只有首尾的数据格式
+// 用来存储已经排序过并连上的索引数组
+            var indexs = new Set()
+// 把数据处理为只有首尾的数据格式
             geoData.forEach(function (array) {
                 arr.push([array[0],array[array.length-1]])
             })
-
+            var start = [];
+            var end = [];
             /**
              * 排序线段
              * @param idx 用来匹配的线段
@@ -165,24 +177,33 @@ axios.get('data/sd.geojson')
              * @param indexs 已经排序过的线段
              */
             function orderLine(idx,lanes,lanesFeatures,arr,indexs) {
-                // 获取线段脑袋
-                var start = arr[idx][0];
-                // 获取线段尾巴
-                var end = arr[idx][1]
-                // 插入默认的匹配的数据位
-                lanes.set(idx,geoData[idx])
-                lanesFeatures.set(idx,json.features[idx])
-                indexs.push(idx)
+
+                if (indexs.size == 0 || !indexs.has(idx)){
+                    // 获取线段脑袋
+                    start = arr[idx][0];
+                    // 获取线段尾巴
+                    end = arr[idx][1]
+                    // 插入默认的匹配的数据位
+                    lanes.set(idx,geoData[idx])
+                    lanesFeatures.set(idx,json.features[idx])
+                    indexs.add(idx)
+                }
+                let factor = 0;
                 // 排尾部
                 arr.forEach(function (value, index, array) {
                     // 如果已经排过序的，直接跳过
-                    for (var i =0 ;i < indexs.length;i++){
-                        if (indexs[i] == index ) {
-                            return
-                        }
+                    if (indexs.has(index)){
+                        return;
                     }
+
+                    // for (var i =0 ;i < indexs.length;i++){
+                    //     if (indexs[i] == index ) {
+                    //         return
+                    //     }
+                    // }
                     // 如果两个点相同，说明是同一条线,尾首对接
-                    if (end[0] == value[0][0] && end[1] == value[0][1]){
+
+                    if (Math.abs(end[0] - value[0][0])<= factor && Math.abs(end[1] - value[0][1])<=factor){
                         let newVar = lanes.get(idx);
                         if (newVar){
                             // 合并数组
@@ -199,19 +220,29 @@ axios.get('data/sd.geojson')
                             lanesFeatures.set(idx,json.features[index])
                         }
                         end = value[1]
-                        indexs.push(index)
+                        indexs.add(index)
+                        // 如果匹配到线段，继续匹配
+                        orderLine(idx,lanes,lanesFeatures,arr,indexs)
+                    }else {
+                        // 如果没有匹配到，说明，没有，则开始另一条线路的匹配
+                        return;
                     }
                 })
                 // 排首部
                 arr.forEach(function (value, index, array) {
                     // 如果已经排过序的，直接跳过
-                    for (var i =0 ;i < indexs.length;i++){
-                        if (indexs[i] == index ) {
-                            return
-                        }
+                    if (indexs.has(index)){
+                        return;
                     }
-                    // 如果两个点相同，说明是同一条线,尾首对接
-                    if (start[0] == value[1][0] && start[1] == value[1][1]){
+
+                    // for (var i =0 ;i < indexs.length;i++){
+                    //     if (indexs[i] == index ) {
+                    //         return
+                    //     }
+                    // }
+
+                    // 如果两个点相同，说明是同一条线,首尾对接
+                    if (Math.abs(start[0] - value[1][0])<=factor && Math.abs(start[1] - value[1][1])<=factor){
                         let newVar = lanes.get(idx);
                         if (newVar){
                             // 合并数组
@@ -230,7 +261,11 @@ axios.get('data/sd.geojson')
                         // lanes.unshift(geoData[index])
                         // lanesFeatures.unshift(json.features[index])
                         start = value[0]
-                        indexs.push(index)
+                        indexs.add(index)
+                        // 如果匹配到线段，继续匹配
+                        orderLine(idx,lanes,lanesFeatures,arr,indexs)
+                    }else {
+                        return;
                     }
                 })
             }
@@ -242,14 +277,14 @@ axios.get('data/sd.geojson')
              */
             function getNextLane(arr,indexs) {
                 for (var i = 0 ; i< arr.length;i ++) {
-                    if (indexs.indexOf(i) == -1){
+                    if (!indexs.has(i)){
                         return i;
                     }
                 }
                 return
             }
             var x = 0;
-            while (indexs.length != arr.length){
+            while (indexs.size != arr.length){
                 console.log((x++))
                 // 获取线段
                 let nextLane = getNextLane(arr,indexs);
