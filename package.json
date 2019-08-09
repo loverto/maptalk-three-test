@@ -26,6 +26,7 @@
     "lodash": "^4.17.15",
     "maptalks": "^0.44.2",
     "maptalks.three": "^0.6.2",
+    "randomcolor": "^0.5.4",
     "three": "^0.107.0"
   },
   "devDependencies": {
