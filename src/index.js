@@ -15,6 +15,8 @@ import {Line} from "three";
 import {DirectionalLight} from "three";
 import Drone from "../module/ClaraModule";
 import {Vector3} from "three";
+import {MeshPhongMaterial} from "three";
+import {MeshBasicMaterial} from "three";
 
 const map = new maptalks.Map('map', {
     // center : [116.1822762440612, 39.926143877394885],
@@ -27,6 +29,7 @@ const map = new maptalks.Map('map', {
     doubleClickZoom : false,
     baseLayer : new maptalks.TileLayer('tile',{
         urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        // urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
         subdomains: ['a','b','c','d'],
         attribution: '&copy; <a href="http://osm.org">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>'
     })
@@ -120,6 +123,7 @@ axios.get('data/bjroad.geojson')
 
         var threeLayer = new ThreeLayer('r', {
             forceRenderOnMoving : true,
+            animation : true,
             forceRenderOnRotating : true
         });
         let data = response.data;
@@ -128,14 +132,21 @@ axios.get('data/bjroad.geojson')
 
 
 
+
         threeLayer.prepareToDraw = function (renderer, scene, camera) {
+
+            // 调整自动动画
+            let threeRenderer = this.getRenderer();
+            threeRenderer.needToRedraw = function(){
+                return true;
+            }
 
             //'#ff0'
             const geometry = new BufferGeometry();
             let randomColor1 = randomColor();
             // '#57ed89'
             randomColor1 = randomColor1.replace("#","0x")
-            const material = new MeshStandardMaterial({color: parseInt(randomColor1), opacity : 0.7});
+            const material = new MeshBasicMaterial({color: parseInt(randomColor1), opacity : 0.7});
             material.side = DoubleSide
 
             let orderLineUtil = new OrderLineUtil();
@@ -158,24 +169,26 @@ axios.get('data/bjroad.geojson')
             geometry.addAttribute('normal', new Float32BufferAttribute(normal, 3));
             geometry.setIndex(new Uint32BufferAttribute(indices, 1));
 
-            let p = new Vector3().fromBufferAttribute(float32BufferAttribute,1);
+
 
             let drone = new Drone();
-            drone.loadModel(renderer, scene, camera,p)
+            drone.loadModel(renderer, scene, camera,float32BufferAttribute)
             // geometry.computeBoundingSphere();
             // const  line = new Line(geometry,material);
 
             const mesh = new Mesh(geometry, material);
             //mesh.position.copy(new Vector3().fromBufferAttribute(float32BufferAttribute,1))
-            // function animate() {
-            //     requestAnimationFrame(animate);
-            //     renderer.render(scene, camera);
-            // }
+            function animate() {
+                requestAnimationFrame(animate);
+                drone.update();
+                renderer.clear()
+                renderer.render(scene, camera);
+            }
             // scene.add(mesh);
+            animate();
             scene.add(mesh);
         };
 
-        // animate();
         threeLayer.addTo(map);
 
     })
