@@ -14,6 +14,7 @@ import {MeshStandardMaterial} from "three";
 import {Line} from "three";
 import {DirectionalLight} from "three";
 import Drone from "../module/ClaraModule";
+import {Vector3} from "three";
 
 const map = new maptalks.Map('map', {
     // center : [116.1822762440612, 39.926143877394885],
@@ -149,14 +150,18 @@ axios.get('data/bjroad.geojson')
             });
             const {position, normal, indices} = polyline;
 
-            let drone = new Drone();
-            drone.loadModel(renderer, scene, camera)
+
 
             // debugger
             let float32BufferAttribute = new Float32BufferAttribute(position, 3);
             geometry.addAttribute('position', float32BufferAttribute);
             geometry.addAttribute('normal', new Float32BufferAttribute(normal, 3));
             geometry.setIndex(new Uint32BufferAttribute(indices, 1));
+
+            let p = new Vector3().fromBufferAttribute(float32BufferAttribute,1);
+
+            let drone = new Drone();
+            drone.loadModel(renderer, scene, camera,p)
             // geometry.computeBoundingSphere();
             // const  line = new Line(geometry,material);
 
