@@ -1,8 +1,9 @@
-// window.THREE = {}
-// import * as THREE from 'imports-loader?THREE\.LegacyJSONLoader=three/examples/js/loaders/deprecated/LegacyJSONLoader!three'
-
 import {PointLight, PointLightHelper, Vector3} from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
+/**
+ * 无人机
+ */
 class Drone {
     // 随机路线
     float32BufferAttribute
@@ -14,8 +15,8 @@ class Drone {
         var self = this;
         var objectLoader = new GLTFLoader();
         objectLoader.load("data/Drone.gltf", function (gltf) {
-            console.log("scene",scene)
-            console.log("gltf",gltf)
+            // console.log("scene",scene)
+            // console.log("gltf",gltf)
             // wm.traverse(function (object) {
             //     scene.add(object)
             // })
@@ -78,7 +79,7 @@ class Drone {
             // lane.y = lane.y + 100
             // lane.z = lane.z - 10
             this.droneSence.position.copy(lane);
-            console.log(this.droneSence.position)
+            // console.log(this.droneSence.position)
         }
         // 再飞回来
         for (let i = this.lanes.length -1 ;i > 0 ;i--){
