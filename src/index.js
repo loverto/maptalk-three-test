@@ -1,22 +1,22 @@
 import * as THREE from 'three';
+import {
+    BufferGeometry,
+    DoubleSide,
+    Float32BufferAttribute,
+    Mesh,
+    MeshPhongMaterial,
+    Uint32BufferAttribute
+} from 'three';
 import * as maptalks from 'maptalks';
-import { ThreeLayer } from 'maptalks.three';
+import {ThreeLayer} from 'maptalks.three';
 import * as axios from "axios";
 import {extrudeGeoJSON} from 'geometry-extrude';
 import * as randomColor from 'randomColor';
 import OrderLineUtil from "../module/OrderLineUtil";
-import {DoubleSide} from "three";
-import {BufferGeometry} from "three";
-import {Float32BufferAttribute} from "three";
-import {Uint32BufferAttribute} from "three";
-import {Mesh} from "three";
-import {MeshStandardMaterial} from "three";
-import {Line} from "three";
-import {DirectionalLight} from "three";
 import Drone from "../module/ClaraModule";
-import {Vector3} from "three";
-import {MeshPhongMaterial} from "three";
-import {MeshBasicMaterial} from "three";
+import {flattenEach} from "@turf/meta";
+import {getCoords} from "@turf/invariant";
+import {cleanCoords} from "@turf/turf";
 
 const map = new maptalks.Map('map', {
     // center : [116.1822762440612, 39.926143877394885],
@@ -118,7 +118,7 @@ axios.get('data/bjbuild.geojson')
         console.log(error);
     });
 
-axios.get('data/bjroad.geojson')
+axios.get('data/4.geojson')
     .then(function (response) {
 
         var threeLayer = new ThreeLayer('r', {
@@ -142,20 +142,26 @@ axios.get('data/bjroad.geojson')
             }
 
             //'#ff0'
-            const geometry = new BufferGeometry();
+
             let randomColor1 = randomColor();
             // '#57ed89'
-            randomColor1 = randomColor1.replace("#","0x")
-            const material = new MeshBasicMaterial({color: parseInt(randomColor1), opacity : 0.7});
+            randomColor1 = randomColor1
+            const material = new MeshPhongMaterial({color: randomColor1, opacity : 0.7});
             material.side = DoubleSide
 
             let orderLineUtil = new OrderLineUtil();
             orderLineUtil.json = json;
             orderLineUtil.me = this;
             json = orderLineUtil.getConvertGeoJson();
+            let n = json.name
+            let crs = json.crs;
+            let t = json.type;
 
+            let float32BufferAttribute = {}
+
+            const geometry = new BufferGeometry();
             const {polyline} = extrudeGeoJSON(json, {
-                depth: 0.01,
+                depth: 0.05,
                 lineWidth: 0.05,
                 bevelSize: 0.01
             });
@@ -164,29 +170,103 @@ axios.get('data/bjroad.geojson')
 
 
             // debugger
-            let float32BufferAttribute = new Float32BufferAttribute(position, 3);
+            float32BufferAttribute = new Float32BufferAttribute(position, 3);
             geometry.addAttribute('position', float32BufferAttribute);
             geometry.addAttribute('normal', new Float32BufferAttribute(normal, 3));
             geometry.setIndex(new Uint32BufferAttribute(indices, 1));
 
 
 
-            let drone = new Drone();
-            drone.loadModel(renderer, scene, camera,float32BufferAttribute)
+
             // geometry.computeBoundingSphere();
             // const  line = new Line(geometry,material);
 
             const mesh = new Mesh(geometry, material);
+            scene.add(mesh);
+
+            // json.features.forEach(function (feature) {
+            //     const geometry = new BufferGeometry();
+            //
+            //     // 初始化数据
+            //     let j = {}
+            //     j.name =n;
+            //     j.crs = crs;
+            //     j.type = t;
+            //     j.features = []
+            //     j.features.push(feature);
+            //
+            //     let duplicate;
+            //     duplicate = function (arr) {
+            //         // 法一：es6
+            //         // let res = new Map();
+            //         // arr.forEach(item => {
+            //         //     item.sort((a, b) => a - b);
+            //         //     res.set(item.join(), item);
+            //         // });
+            //         // return Array.from(res.values);
+            //
+            //         // 法二：
+            //         let res={}
+            //         arr.forEach(item=>{
+            //             item.sort((a,b)=>a-b);
+            //             res[item]=item;
+            //         });
+            //         return Object.values(res)
+            //     };
+            //
+            //     flattenEach(j, function (currentFeature, featureIndex) {
+            //         currentFeature.geometry.coordinates = getCoords(cleanCoords(currentFeature))
+            //         let arr = currentFeature.geometry.coordinates;
+            //         let b = [];
+            //         b.push(arr)
+            //
+            //         let duplicate1 = duplicate(b);
+            //         console.log("又重复数据",duplicate1,b)
+            //         if (duplicate1.length<b.length){
+            //         }
+            //         currentFeature.geometry.coordinates = duplicate1[0]
+            //         j.features[featureIndex] = currentFeature;
+            //     });
+            //
+            //     const {polyline} = extrudeGeoJSON(j, {
+            //         depth: 0.05,
+            //         lineWidth: 0.05,
+            //         bevelSize: 0.01
+            //     });
+            //     const {position, normal, indices} = polyline;
+            //
+            //
+            //
+            //     // debugger
+            //     float32BufferAttribute = new Float32BufferAttribute(position, 3);
+            //     geometry.addAttribute('position', float32BufferAttribute);
+            //     geometry.addAttribute('normal', new Float32BufferAttribute(normal, 3));
+            //     geometry.setIndex(new Uint32BufferAttribute(indices, 1));
+            //
+            //
+            //
+            //
+            //     // geometry.computeBoundingSphere();
+            //     // const  line = new Line(geometry,material);
+            //
+            //     const mesh = new Mesh(geometry, material);
+            //     scene.add(mesh);
+            // })
+
+            let drone = new Drone();
+            drone.loadModel(renderer, scene, camera,float32BufferAttribute)
+            // mesh.drawMode = THREE.TriangleStripDrawMode;
+            // mesh.drawMode = THREE.TriangleFanDrawMode;
             //mesh.position.copy(new Vector3().fromBufferAttribute(float32BufferAttribute,1))
             function animate() {
                 requestAnimationFrame(animate);
                 drone.update();
-                renderer.clear()
-                renderer.render(scene, camera);
+                //renderer.clear()
+                //renderer.render(scene, camera);
             }
             // scene.add(mesh);
             animate();
-            scene.add(mesh);
+
         };
 
         threeLayer.addTo(map);

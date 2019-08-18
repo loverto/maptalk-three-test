@@ -22,11 +22,13 @@
   "dependencies": {
     "@turf/turf": "^5.1.6",
     "axios": "^0.19.0",
+    "bluebird": "latest",
     "geometry-extrude": "^0.1.2",
     "lodash": "^4.17.15",
     "maptalks": "^0.44.2",
     "maptalks.three": "^0.6.2",
     "randomcolor": "^0.5.4",
+    "seedrandom": "^3.0.3",
     "three": "^0.107.0"
   },
   "devDependencies": {
